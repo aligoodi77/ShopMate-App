@@ -1,98 +1,169 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { fetchProducts } from "@/api/productsApi";
+import { searchProducts } from "@/utils/searchProducts";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Pressable,
+} from "react-native";
+import { Link } from "expo-router";
+import { products } from "@/data/products";
+export default function HomeScreen() {
+  const [search, setSearch] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const {
+    data = [],
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["products"],
+    queryFn: fetchProducts,
+  });
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
+  if (isLoading) {
     return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
+      <View style={styles.center}>
+        <Text>Loading...</Text>
+      </View>
     );
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+
+  if (isError) {
+    return (
+      <View style={styles.center}>
+        <Text>Error occurred</Text>
+      </View>
+    );
+  }
+  const searchedProducts = useMemo(
+    () => searchProducts(data, search),
+    [data, search],
   );
-}
 
-export default function HomeScreen() {
+  function addToCart(products: any) {
+    setToastMessage("Added to cart!");
+    setTimeout(() => setToastMessage(""), 2000);
+  }
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
+    <View style={styles.screen}>
+      <TextInput
+        placeholder="Search products..."
+        value={search}
+        onChangeText={setSearch}
+        style={styles.searchInput}
+      />
 
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
+      <FlatList
+        data={searchedProducts}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <Link href={`/products/${item.id}`} asChild>
+            <Pressable style={styles.card}>
+              <Image source={item.image} style={styles.image} />
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.description}>{item.description}</Text>
+              <Text style={styles.price}>${item.price}</Text>
+              <Pressable
+                style={styles.addButton}
+                onPress={() => addToCart(item)}
+              >
+                <Text style={styles.addButtonText}>Add to Cart</Text>
+              </Pressable>
+            </Pressable>
+          </Link>
+        )}
+      />
+      {toastMessage ? (
+        <View style={styles.toast}>
+          <Text style={styles.toastText}>{toastMessage}</Text>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: "#f3f4f6",
+    padding: 16,
   },
-  safeArea: {
+
+  center: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
+
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
   },
+
+  image: {
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
+    backgroundColor: "#f1f5f9",
+    borderRadius: 16,
+  },
+
   title: {
-    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: "800",
+    marginTop: 12,
   },
-  code: {
-    textTransform: 'uppercase',
+
+  description: {
+    color: "#6b7280",
+    marginTop: 6,
   },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+
+  price: {
+    fontSize: 22,
+    fontWeight: "900",
+    marginTop: 10,
+  },
+  searchInput: {
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    marginBottom: 16,
+  },
+  addButton: {
+    backgroundColor: "#2563eb",
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 12,
+    alignItems: "center",
+  },
+  addButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+  toast: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+    backgroundColor: "#333",
+    padding: 16,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  toastText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
