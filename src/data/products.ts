@@ -1,87 +1,162 @@
+import type { ImageSourcePropType } from "react-native";
+
+export type ProductCategory =
+  | "Laptops"
+  | "Phones"
+  | "Audio"
+  | "Gaming"
+  | "Keyboards"
+  | "Printers";
+
 export type Product = {
   id: string;
   title: string;
   description: string;
   price: number;
-  image: any;
+  image: ImageSourcePropType;
+  category: ProductCategory;
+  isTrending?: boolean;
 };
 
-export const products = [
+export const products: Product[] = [
   {
     id: "1",
-    title: "Fujifilm Instax Mini Film Pack",
+    title: "ASUS Zenbook OLED Laptop",
     image: require("../assets/images/1.jpg"),
-    description: "Instant photo film pack for Fujifilm Instax Mini cameras.",
-    price: 24.99,
+    description:
+      "Slim OLED laptop with a premium build for work, study, and travel.",
+    price: 1199.99,
+    category: "Laptops",
+    isTrending: true,
   },
   {
     id: "2",
-    title: "DJI Osmo Mobile Kit",
+    title: "Microsoft Surface Laptop",
     image: require("../assets/images/2.jpg"),
     description:
-      "Portable smartphone stabilizer kit with useful filming accessories.",
-    price: 129.99,
+      "Lightweight touchscreen laptop with a clean design and everyday power.",
+    price: 999.99,
+    category: "Laptops",
   },
   {
     id: "3",
-    title: "Kodak Compact Digital Camera",
+    title: "PlayStation 5 Slim Console",
     image: require("../assets/images/3.jpg"),
     description:
-      "Small digital camera with 5X wide zoom and Full HD recording.",
-    price: 89.99,
+      "Next-gen gaming console with fast loading, 4K gaming, and DualSense control.",
+    price: 499.99,
+    category: "Gaming",
+    isTrending: true,
   },
   {
     id: "4",
-    title: "Tapo Smart Security Camera",
+    title: "Open-Ear Wireless Earbuds",
     image: require("../assets/images/4.jpg"),
-    description: "Indoor smart camera for home monitoring and security.",
-    price: 39.99,
+    description:
+      "Comfortable open-ear earbuds with a compact charging case.",
+    price: 129.99,
+    category: "Audio",
   },
   {
     id: "5",
-    title: "Kodak Charmera Mini Camera",
+    title: "Black Wireless Earbuds",
     image: require("../assets/images/5.jpg"),
-    description: "Retro-style mini camera with colorful collectible designs.",
-    price: 19.99,
+    description:
+      "Pocket-size Bluetooth earbuds with touch controls and a matte case.",
+    price: 79.99,
+    category: "Audio",
   },
   {
     id: "6",
-    title: "SanDisk Ultra 128GB microSD",
+    title: "Over-Ear Noise Cancelling Headphones",
     image: require("../assets/images/6.jpg"),
     description:
-      "128GB microSD card for phones, cameras, tablets, and storage expansion.",
-    price: 14.99,
+      "Premium wireless headphones with soft cushions and active noise cancelling.",
+    price: 299.99,
+    category: "Audio",
+    isTrending: true,
   },
   {
     id: "7",
-    title: "Wireless Microphone Set",
+    title: "Creality Ender 3D Printer",
     image: require("../assets/images/7.jpg"),
     description:
-      "Compact wireless microphone kit for video recording and content creation.",
-    price: 59.99,
+      "Desktop 3D printer for prototypes, models, repairs, and maker projects.",
+    price: 229.99,
+    category: "Printers",
   },
   {
     id: "8",
-    title: "Instax Mini Evo Camera",
+    title: "Flashforge Adventurer 3D Printer",
     image: require("../assets/images/8.jpg"),
     description:
-      "Hybrid instant camera with retro design and printed photo output.",
-    price: 199.99,
+      "Enclosed 3D printer with a compact chamber for cleaner desktop printing.",
+    price: 399.99,
+    category: "Printers",
+    isTrending: true,
   },
   {
     id: "9",
-    title: "SanDisk Extreme Pro 256GB microSD",
+    title: "RGB Mechanical Gaming Keyboard",
     image: require("../assets/images/9.jpg"),
     description:
-      "High-speed 256GB microSD card for cameras, drones, and 4K video.",
-    price: 29.99,
+      "Wired mechanical keyboard with RGB lighting and fast gaming switches.",
+    price: 89.99,
+    category: "Keyboards",
   },
   {
     id: "10",
-    title: "Lenovo ThinkPad Laptop",
+    title: "Logitech Wireless Keyboard",
     image: require("../assets/images/10.jpg"),
     description:
-      "Business laptop with compact design, strong keyboard, and Windows support.",
+      "Low-profile wireless keyboard built for quiet typing and desk setups.",
+    price: 49.99,
+    category: "Keyboards",
+  },
+  {
+    id: "11",
+    title: "iPhone Pro Max Smartphone",
+    image: require("../assets/images/11.jpg"),
+    description:
+      "Large-screen smartphone with 256GB storage and a pro camera system.",
+    price: 1199.99,
+    category: "Phones",
+    isTrending: true,
+  },
+  {
+    id: "12",
+    title: "Samsung Galaxy 5G Smartphone",
+    image: require("../assets/images/12.jpg"),
+    description:
+      "5G Android smartphone with 256GB storage and 8GB RAM.",
     price: 899.99,
+    category: "Phones",
+  },
+  {
+    id: "13",
+    title: "Xiaomi Redmi Smartphone",
+    image: require("../assets/images/13.jpg"),
+    description:
+      "Affordable smartphone with a bright display and dual rear cameras.",
+    price: 299.99,
+    category: "Phones",
+  },
+  {
+    id: "14",
+    title: "iPhone Smartphone",
+    image: require("../assets/images/14.jpg"),
+    description:
+      "Compact iPhone with 256GB storage and a bright green finish.",
+    price: 799.99,
+    category: "Phones",
+  },
+  {
+    id: "15",
+    title: "Premium Over-Ear Headset",
+    image: require("../assets/images/headphone.png"),
+    description:
+      "Wireless over-ear headset with a clean design for calls, music, and gaming.",
+    price: 249.99,
+    category: "Audio",
   },
 ];

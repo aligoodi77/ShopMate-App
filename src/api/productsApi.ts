@@ -1,4 +1,4 @@
-import { products } from "@/data/products";
+import { products } from "../data/products";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
