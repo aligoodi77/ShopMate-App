@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import {
+  Alert,
   FlatList,
   Image,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -10,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/appStore";
+import { useToast } from "@/components/AppToast";
 
 function formatPrice(price: number) {
   return `$${price.toFixed(2)}`;
@@ -25,9 +28,84 @@ export default function CartScreen() {
     getTotalPrice,
     getTotalCount,
   } = useAppStore();
+  const { showToast } = useToast();
 
   const totalPrice = getTotalPrice();
   const totalCount = getTotalCount();
+
+  function handleClearCart() {
+    console.log("CLEAR ALERT OPENED");
+
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Are you sure you want to remove all items from your cart?",
+      );
+
+      if (confirmed) {
+        console.log("WEB CLEAR CONFIRMED");
+        clearCart();
+        showToast("Cart cleared", "info");
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      "Clear cart?",
+      "Are you sure you want to remove all items from your cart?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: () => {
+            console.log("CLEAR CONFIRMED");
+            clearCart();
+            showToast("Cart cleared", "info");
+          },
+        },
+      ],
+    );
+  }
+
+  function handleRemoveItem(productId: string) {
+    console.log("REMOVE ALERT OPENED", productId);
+
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm(
+        "Are you sure you want to remove this product?",
+      );
+
+      if (confirmed) {
+        removeFromCart(productId);
+        showToast("Product removed from cart", "info");
+      }
+
+      return;
+    }
+
+    Alert.alert(
+      "Remove item?",
+      "Are you sure you want to remove this product from your cart?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            removeFromCart(productId);
+            showToast("Product removed from cart", "info");
+          },
+        },
+      ],
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -76,7 +154,7 @@ export default function CartScreen() {
           <Text style={styles.headerSubtitle}>{totalCount} items</Text>
         </View>
 
-        <Pressable style={styles.clearButton} onPress={clearCart}>
+        <Pressable style={styles.clearButton} onPress={handleClearCart}>
           <Text style={styles.clearButtonText}>Clear</Text>
         </Pressable>
       </View>
@@ -122,7 +200,7 @@ export default function CartScreen() {
 
                 <Pressable
                   style={styles.removeButton}
-                  onPress={() => removeFromCart(item.product.id)}
+                  onPress={() => handleRemoveItem(item.product.id)}
                 >
                   <Ionicons name="trash-outline" size={19} color="#EF4444" />
                 </Pressable>

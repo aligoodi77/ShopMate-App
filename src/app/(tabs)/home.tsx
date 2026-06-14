@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { fetchProducts } from "../../api/productsApi";
 import { Product, ProductCategory } from "../../data/products";
 import { useAppStore } from "../../store/appStore";
+import { useToast } from "@/components/AppToast";
 // import { useCartStore } from "../../store/cartStore";
 
 type IconName = keyof typeof Ionicons.glyphMap;
@@ -84,6 +85,8 @@ export default function HomeScreen() {
     addToCart,
     getTotalCount,
   } = useAppStore();
+
+  const { showToast } = useToast();
 
   // const cartCount = useCartStore((state) => state.getTotalCount());
   // const cartCount = 0;
@@ -502,6 +505,7 @@ export default function HomeScreen() {
                     onPress={(event) => {
                       event.stopPropagation();
                       addToCart(item);
+                      showToast(`${item.title} added to cart`, "success");
                     }}
                   >
                     <Ionicons name="add" size={20} color="#fff" />
@@ -510,20 +514,25 @@ export default function HomeScreen() {
               </Pressable>
 
               <Pressable
-                style={[
-                  styles.favoriteButton,
-                  {
-                    backgroundColor: isFavorite(item.id)
-                      ? "#FEE2E2"
-                      : theme.surface,
-                  },
-                ]}
-                onPress={() => toggleFavorite(item.id)}
+                onPress={(event) => {
+                  event.stopPropagation();
+
+                  const alreadyFavorite = isFavorite(item.id);
+
+                  toggleFavorite(item.id);
+
+                  showToast(
+                    alreadyFavorite
+                      ? "Removed from favorites"
+                      : "Added to favorites",
+                    "info",
+                  );
+                }}
               >
                 <Ionicons
                   name={isFavorite(item.id) ? "heart" : "heart-outline"}
-                  size={20}
-                  color={isFavorite(item.id) ? "#EF4444" : theme.muted}
+                  size={22}
+                  color={isFavorite(item.id) ? "#EF4444" : "#64748B"}
                 />
               </Pressable>
             </View>

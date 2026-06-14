@@ -96,12 +96,14 @@ export function AppStoreProvider({ children }: PropsWithChildren) {
       },
 
       removeFromCart: (productId) => {
+        console.log("removeFromCart called:", productId);
         setCartItems((currentItems) =>
           currentItems.filter((item) => item.product.id !== productId),
         );
       },
 
       clearCart: () => {
+        console.log("clearCart called inside store");
         setCartItems([]);
       },
 
