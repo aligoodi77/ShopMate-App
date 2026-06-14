@@ -76,10 +76,18 @@ export default function HomeScreen() {
   const [activeCategory, setActiveCategory] = useState("All");
   const [activeTrendIndex, setActiveTrendIndex] = useState(0);
   const [isDrawerVisible, setIsDrawerVisible] = useState(false);
-  const { isDarkMode, setIsDarkMode, isFavorite, toggleFavorite } = useAppStore();
+  const {
+    isDarkMode,
+    setIsDarkMode,
+    isFavorite,
+    toggleFavorite,
+    addToCart,
+    getTotalCount,
+  } = useAppStore();
 
-  // const cartCount = useCartStore((state) => state.getTotalCount?.() ?? 0);
-  const cartCount = 0;
+  // const cartCount = useCartStore((state) => state.getTotalCount());
+  // const cartCount = 0;
+  const cartCount = getTotalCount();
   const trendCardWidth = width - 36;
   const drawerWidth = Math.min(width * 0.8, 320);
   const [drawerProgress] = useState(() => new Animated.Value(0));
@@ -96,9 +104,12 @@ export default function HomeScreen() {
     }),
     [isDarkMode],
   );
-  const viewabilityConfig = useMemo(() => ({
-    viewAreaCoveragePercentThreshold: 60,
-  }), []);
+  const viewabilityConfig = useMemo(
+    () => ({
+      viewAreaCoveragePercentThreshold: 60,
+    }),
+    [],
+  );
 
   const onTrendViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
@@ -242,7 +253,10 @@ export default function HomeScreen() {
                 <Pressable
                   style={[
                     styles.iconButton,
-                    { backgroundColor: theme.surface, borderColor: theme.border },
+                    {
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
                   ]}
                   onPress={handleOpenSidebar}
                 >
@@ -262,7 +276,10 @@ export default function HomeScreen() {
                 <Pressable
                   style={[
                     styles.cartButton,
-                    { backgroundColor: theme.surface, borderColor: theme.border },
+                    {
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                    },
                   ]}
                   onPress={handleOpenCart}
                 >
@@ -292,7 +309,10 @@ export default function HomeScreen() {
                   style={[styles.searchInput, { color: theme.text }]}
                 />
 
-                <Pressable style={styles.voiceButton} onPress={handleVoiceSearch}>
+                <Pressable
+                  style={styles.voiceButton}
+                  onPress={handleVoiceSearch}
+                >
                   <Ionicons name="mic" size={22} color="#0B63F6" />
                 </Pressable>
               </View>
@@ -331,7 +351,11 @@ export default function HomeScreen() {
 
                       <View style={styles.trendCta}>
                         <Text style={styles.trendCtaText}>Shop now</Text>
-                        <Ionicons name="arrow-forward" size={14} color="#0B63F6" />
+                        <Ionicons
+                          name="arrow-forward"
+                          size={14}
+                          color="#0B63F6"
+                        />
                       </View>
                     </View>
 
@@ -473,9 +497,15 @@ export default function HomeScreen() {
                 <View style={styles.productFooter}>
                   <Text style={styles.productPrice}>${item.price}</Text>
 
-                  <View style={styles.addSmallButton}>
+                  <Pressable
+                    style={styles.addSmallButton}
+                    onPress={(event) => {
+                      event.stopPropagation();
+                      addToCart(item);
+                    }}
+                  >
                     <Ionicons name="add" size={20} color="#fff" />
-                  </View>
+                  </Pressable>
                 </View>
               </Pressable>
 
@@ -539,7 +569,10 @@ export default function HomeScreen() {
               },
             ]}
           >
-            <SafeAreaView style={styles.drawerSafeArea} edges={["top", "bottom"]}>
+            <SafeAreaView
+              style={styles.drawerSafeArea}
+              edges={["top", "bottom"]}
+            >
               <View style={styles.drawerHeader}>
                 <Image source={userAvatarImage} style={styles.drawerAvatar} />
 
@@ -555,7 +588,10 @@ export default function HomeScreen() {
                 <Pressable
                   style={[
                     styles.drawerCloseButton,
-                    { backgroundColor: theme.surfaceSoft, borderColor: theme.border },
+                    {
+                      backgroundColor: theme.surfaceSoft,
+                      borderColor: theme.border,
+                    },
                   ]}
                   onPress={closeDrawer}
                 >
@@ -569,28 +605,35 @@ export default function HomeScreen() {
                     key={item.route}
                     style={[
                       styles.drawerMenuItem,
-                      { backgroundColor: theme.surface, borderColor: theme.border },
+                      {
+                        backgroundColor: theme.surface,
+                        borderColor: theme.border,
+                      },
                     ]}
                     onPress={() => handleDrawerItemPress(item.route)}
                   >
                     <View style={styles.drawerMenuIcon}>
-                      <Ionicons
-                        name={item.icon}
-                        size={20}
-                        color="#0B63F6"
-                      />
+                      <Ionicons name={item.icon} size={20} color="#0B63F6" />
                     </View>
 
-                    <Text style={[styles.drawerMenuText, { color: theme.text }]}>
+                    <Text
+                      style={[styles.drawerMenuText, { color: theme.text }]}
+                    >
                       {item.label}
                     </Text>
-                    <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={18}
+                      color="#94A3B8"
+                    />
                   </Pressable>
                 ))}
               </View>
 
               <View style={styles.drawerPreferences}>
-                <Text style={[styles.drawerPreferenceTitle, { color: theme.muted }]}>
+                <Text
+                  style={[styles.drawerPreferenceTitle, { color: theme.muted }]}
+                >
                   Preferences
                 </Text>
 
@@ -624,9 +667,16 @@ export default function HomeScreen() {
               </View>
 
               <View style={styles.drawerBottom}>
-                <Pressable style={styles.drawerLogoutButton} onPress={handleLogout}>
+                <Pressable
+                  style={styles.drawerLogoutButton}
+                  onPress={handleLogout}
+                >
                   <View style={styles.drawerLogoutIcon}>
-                    <Ionicons name="log-out-outline" size={24} color="#DC2626" />
+                    <Ionicons
+                      name="log-out-outline"
+                      size={24}
+                      color="#DC2626"
+                    />
                   </View>
 
                   <Text style={styles.drawerLogoutText}>Log Out</Text>

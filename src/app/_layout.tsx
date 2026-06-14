@@ -13,13 +13,9 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="index" />
             <Stack.Screen name="login" />
+            <Stack.Screen name="cart" />
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="products/[id]"
-              options={{
-                headerShown: false,
-              }}
-            />
+            <Stack.Screen name="products/[id]" />
           </Stack>
         </AppStoreProvider>
       </SafeAreaProvider>
