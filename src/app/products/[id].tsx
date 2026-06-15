@@ -16,7 +16,8 @@ import { useAppStore } from "../../store/appStore";
 
 export default function ProductDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { isDarkMode, isFavorite, toggleFavorite } = useAppStore();
+  const { isDarkMode, isFavorite, toggleFavorite, addToCart } = useAppStore();
+
   const theme = {
     background: isDarkMode ? "#0B1120" : "#F8FAFC",
     surface: isDarkMode ? "#111827" : "#FFFFFF",
@@ -38,7 +39,9 @@ export default function ProductDetailScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.center, { backgroundColor: theme.background }]}
+      >
         <ActivityIndicator size="large" color="#0B63F6" />
         <Text style={[styles.centerText, { color: theme.muted }]}>
           Loading product...
@@ -49,7 +52,9 @@ export default function ProductDetailScreen() {
 
   if (isError || !product) {
     return (
-      <SafeAreaView style={[styles.center, { backgroundColor: theme.background }]}>
+      <SafeAreaView
+        style={[styles.center, { backgroundColor: theme.background }]}
+      >
         <Ionicons name="alert-circle" size={44} color="#EF4444" />
         <Text style={[styles.errorTitle, { color: theme.text }]}>
           Product not found
@@ -64,7 +69,9 @@ export default function ProductDetailScreen() {
   const favorite = isFavorite(product.id);
 
   return (
-    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
+    <SafeAreaView
+      style={[styles.screen, { backgroundColor: theme.background }]}
+    >
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -109,10 +116,7 @@ export default function ProductDetailScreen() {
           ]}
         >
           <View
-            style={[
-              styles.imageStage,
-              { backgroundColor: theme.surfaceSoft },
-            ]}
+            style={[styles.imageStage, { backgroundColor: theme.surfaceSoft }]}
           >
             <Image source={product.image} style={styles.productImage} />
           </View>
@@ -125,7 +129,9 @@ export default function ProductDetailScreen() {
 
             <View style={styles.ratingPill}>
               <Ionicons name="star" size={15} color="#F59E0B" />
-              <Text style={[styles.ratingText, { color: theme.text }]}>4.8</Text>
+              <Text style={[styles.ratingText, { color: theme.text }]}>
+                4.8
+              </Text>
             </View>
           </View>
         </View>
@@ -147,8 +153,12 @@ export default function ProductDetailScreen() {
         >
           <View style={styles.infoItem}>
             <Ionicons name="shield-checkmark" size={22} color="#059669" />
-            <Text style={[styles.infoLabel, { color: theme.text }]}>Warranty</Text>
-            <Text style={[styles.infoValue, { color: theme.muted }]}>12 months</Text>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              Warranty
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.muted }]}>
+              12 months
+            </Text>
           </View>
 
           <View style={styles.infoDivider} />
@@ -156,15 +166,21 @@ export default function ProductDetailScreen() {
           <View style={styles.infoItem}>
             <Ionicons name="cube" size={22} color="#0B63F6" />
             <Text style={[styles.infoLabel, { color: theme.text }]}>Stock</Text>
-            <Text style={[styles.infoValue, { color: theme.muted }]}>Available</Text>
+            <Text style={[styles.infoValue, { color: theme.muted }]}>
+              Available
+            </Text>
           </View>
 
           <View style={styles.infoDivider} />
 
           <View style={styles.infoItem}>
             <Ionicons name="car" size={22} color="#7C3AED" />
-            <Text style={[styles.infoLabel, { color: theme.text }]}>Delivery</Text>
-            <Text style={[styles.infoValue, { color: theme.muted }]}>2-4 days</Text>
+            <Text style={[styles.infoLabel, { color: theme.text }]}>
+              Delivery
+            </Text>
+            <Text style={[styles.infoValue, { color: theme.muted }]}>
+              2-4 days
+            </Text>
           </View>
         </View>
       </ScrollView>
@@ -180,7 +196,7 @@ export default function ProductDetailScreen() {
           <Text style={styles.price}>${product.price}</Text>
         </View>
 
-        <Pressable style={styles.addButton}>
+        <Pressable style={styles.addButton} onPress={() => addToCart(product)}>
           <Ionicons name="cart" size={21} color="#FFFFFF" />
           <Text style={styles.addButtonText}>Add to Cart</Text>
         </Pressable>
