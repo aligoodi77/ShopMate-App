@@ -14,6 +14,16 @@ type ProductRow = {
   stock: number | null;
 };
 
+export type ProductInput = {
+  title: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  category: ProductCategory;
+  isTrending: boolean;
+  stock: number;
+};
+
 function mapProduct(row: ProductRow): Product {
   return {
     id: row.id,
@@ -51,4 +61,48 @@ export async function fetchProductById(id: string): Promise<Product> {
   }
 
   return mapProduct(data as ProductRow);
+}
+
+export async function createProduct(input: ProductInput): Promise<Product> {
+  const { data, error } = await supabase
+    .from("products")
+    .insert(toProductRowInput(input))
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapProduct(data as ProductRow);
+}
+
+export async function updateProduct(
+  id: string,
+  input: ProductInput,
+): Promise<Product> {
+  const { data, error } = await supabase
+    .from("products")
+    .update(toProductRowInput(input))
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return mapProduct(data as ProductRow);
+}
+
+function toProductRowInput(input: ProductInput) {
+  return {
+    title: input.title,
+    description: input.description,
+    price: input.price,
+    image_url: input.imageUrl,
+    category: input.category,
+    is_trending: input.isTrending,
+    stock: input.stock,
+  };
 }

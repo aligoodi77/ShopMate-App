@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import {
   Alert,
   FlatList,
@@ -11,7 +12,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useAppStore } from "../store/appStore";
+import { useAppStore } from "../../store/appStore";
 import { useToast } from "@/components/AppToast";
 
 function formatPrice(price: number) {
@@ -21,6 +22,7 @@ function formatPrice(price: number) {
 export default function CartScreen() {
   const {
     cartItems,
+    isDarkMode,
     addToCart,
     decreaseQuantity,
     removeFromCart,
@@ -32,6 +34,20 @@ export default function CartScreen() {
 
   const totalPrice = getTotalPrice();
   const totalCount = getTotalCount();
+  const theme = useMemo(
+    () => ({
+      background: isDarkMode ? "#0B1120" : "#F8FAFC",
+      surface: isDarkMode ? "#111827" : "#FFFFFF",
+      surfaceSoft: isDarkMode ? "#172033" : "#F1F5F9",
+      text: isDarkMode ? "#F8FAFC" : "#0F172A",
+      muted: isDarkMode ? "#94A3B8" : "#64748B",
+      border: isDarkMode ? "#263244" : "#E2E8F0",
+      iconSurface: isDarkMode ? "#1E3A5F" : "#EAF3FF",
+      quantityButton: isDarkMode ? "#0B1120" : "#FFFFFF",
+      footer: isDarkMode ? "#111827" : "#FFFFFF",
+    }),
+    [isDarkMode],
+  );
 
   function handleClearCart() {
     console.log("CLEAR ALERT OPENED");
@@ -109,25 +125,42 @@ export default function CartScreen() {
 
   if (cartItems.length === 0) {
     return (
-      <SafeAreaView style={styles.screen}>
+      <SafeAreaView
+        style={[styles.screen, { backgroundColor: theme.background }]}
+      >
         <View style={styles.header}>
-          <Pressable style={styles.iconButton} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="#0F172A" />
+          <Pressable
+            style={[
+              styles.iconButton,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+            onPress={() => router.back()}
+          >
+            <Ionicons name="chevron-back" size={24} color={theme.text} />
           </Pressable>
 
-          <Text style={styles.headerTitle}>My Cart</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>
+            My Cart
+          </Text>
 
           <View style={styles.iconButtonPlaceholder} />
         </View>
 
         <View style={styles.emptyBox}>
-          <View style={styles.emptyIconBox}>
+          <View
+            style={[
+              styles.emptyIconBox,
+              { backgroundColor: theme.iconSurface },
+            ]}
+          >
             <Ionicons name="cart-outline" size={54} color="#0B63F6" />
           </View>
 
-          <Text style={styles.emptyTitle}>Your cart is empty</Text>
+          <Text style={[styles.emptyTitle, { color: theme.text }]}>
+            Your cart is empty
+          </Text>
 
-          <Text style={styles.emptySubtitle}>
+          <Text style={[styles.emptySubtitle, { color: theme.muted }]}>
             Start adding products and they will appear here.
           </Text>
 
@@ -143,15 +176,25 @@ export default function CartScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#0F172A" />
+        <Pressable
+          style={[
+            styles.iconButton,
+            { backgroundColor: theme.surface, borderColor: theme.border },
+          ]}
+          onPress={() => router.back()}
+        >
+          <Ionicons name="chevron-back" size={24} color={theme.text} />
         </Pressable>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>My Cart</Text>
-          <Text style={styles.headerSubtitle}>{totalCount} items</Text>
+          <Text style={[styles.headerTitle, { color: theme.text }]}>
+            My Cart
+          </Text>
+          <Text style={[styles.headerSubtitle, { color: theme.muted }]}>
+            {totalCount} items
+          </Text>
         </View>
 
         <Pressable style={styles.clearButton} onPress={handleClearCart}>
@@ -165,13 +208,23 @@ export default function CartScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <View style={styles.cartItem}>
-            <View style={styles.imageBox}>
+          <View
+            style={[
+              styles.cartItem,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <View
+              style={[styles.imageBox, { backgroundColor: theme.surfaceSoft }]}
+            >
               <Image source={item.product.image} style={styles.image} />
             </View>
 
             <View style={styles.itemInfo}>
-              <Text style={styles.itemTitle} numberOfLines={2}>
+              <Text
+                style={[styles.itemTitle, { color: theme.text }]}
+                numberOfLines={2}
+              >
                 {item.product.title}
               </Text>
 
@@ -180,21 +233,34 @@ export default function CartScreen() {
               </Text>
 
               <View style={styles.itemBottom}>
-                <View style={styles.quantityBox}>
+                <View
+                  style={[
+                    styles.quantityBox,
+                    { backgroundColor: theme.surfaceSoft },
+                  ]}
+                >
                   <Pressable
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      { backgroundColor: theme.quantityButton },
+                    ]}
                     onPress={() => decreaseQuantity(item.product.id)}
                   >
-                    <Ionicons name="remove" size={18} color="#0F172A" />
+                    <Ionicons name="remove" size={18} color={theme.text} />
                   </Pressable>
 
-                  <Text style={styles.quantityText}>{item.quantity}</Text>
+                  <Text style={[styles.quantityText, { color: theme.text }]}>
+                    {item.quantity}
+                  </Text>
 
                   <Pressable
-                    style={styles.quantityButton}
+                    style={[
+                      styles.quantityButton,
+                      { backgroundColor: theme.quantityButton },
+                    ]}
                     onPress={() => addToCart(item.product)}
                   >
-                    <Ionicons name="add" size={18} color="#0F172A" />
+                    <Ionicons name="add" size={18} color={theme.text} />
                   </Pressable>
                 </View>
 
@@ -210,21 +276,32 @@ export default function CartScreen() {
         )}
       />
 
-      <View style={styles.footer}>
+      <View
+        style={[
+          styles.footer,
+          { backgroundColor: theme.footer, borderColor: theme.border },
+        ]}
+      >
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Subtotal</Text>
-          <Text style={styles.summaryValue}>{formatPrice(totalPrice)}</Text>
+          <Text style={[styles.summaryLabel, { color: theme.muted }]}>
+            Subtotal
+          </Text>
+          <Text style={[styles.summaryValue, { color: theme.text }]}>
+            {formatPrice(totalPrice)}
+          </Text>
         </View>
 
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Shipping</Text>
+          <Text style={[styles.summaryLabel, { color: theme.muted }]}>
+            Shipping
+          </Text>
           <Text style={styles.freeText}>Free</Text>
         </View>
 
-        <View style={styles.divider} />
+        <View style={[styles.divider, { backgroundColor: theme.border }]} />
 
         <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={[styles.totalLabel, { color: theme.text }]}>Total</Text>
           <Text style={styles.totalValue}>{formatPrice(totalPrice)}</Text>
         </View>
 

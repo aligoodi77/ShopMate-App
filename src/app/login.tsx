@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -14,13 +14,21 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { loginUser, registerUser } from "../lib/auth";
+import {
+  loginUser,
+  registerUser,
+  signInWithSocialProvider,
+  SocialAuthProvider,
+} from "../lib/auth";
+import { useAuthStore } from "../store/authStore";
 import { colors, radius, spacing } from "../theme";
 
 type AuthMode = "login" | "register";
+type IconName = keyof typeof Ionicons.glyphMap;
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { session, isLoading: isAuthLoading } = useAuthStore();
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [fullName, setFullName] = useState("");
@@ -28,8 +36,11 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingProvider, setLoadingProvider] =
+    useState<SocialAuthProvider | null>(null);
 
   const isRegisterMode = mode === "register";
+  const isSubmitting = isLoading || loadingProvider !== null;
 
   async function handleSubmit() {
     if (isRegisterMode && !fullName.trim()) {
@@ -51,13 +62,19 @@ export default function LoginScreen() {
       setIsLoading(true);
 
       if (isRegisterMode) {
-        await registerUser({
+        const data = await registerUser({
           fullName: fullName.trim(),
           email: email.trim(),
           password,
         });
 
-        Alert.alert("Account created", "Your account has been created.");
+        if (!data.session) {
+          Alert.alert(
+            "Check your email",
+            "Your account was created. Confirm your email to finish signing in.",
+          );
+          return;
+        }
       } else {
         await loginUser({
           email: email.trim(),
@@ -76,8 +93,38 @@ export default function LoginScreen() {
     }
   }
 
+  async function handleSocialAuth(provider: SocialAuthProvider) {
+    try {
+      setLoadingProvider(provider);
+      const session = await signInWithSocialProvider(provider);
+
+      if (session) {
+        router.replace("/home" as never);
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Something went wrong.";
+
+      Alert.alert("Auth error", message);
+    } finally {
+      setLoadingProvider(null);
+    }
+  }
+
   function toggleMode() {
     setMode((currentMode) => (currentMode === "login" ? "register" : "login"));
+  }
+
+  if (isAuthLoading) {
+    return (
+      <SafeAreaView style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
+  }
+
+  if (session) {
+    return <Redirect href="/home" />;
   }
 
   return (
@@ -141,8 +188,8 @@ export default function LoginScreen() {
 
           <Pressable
             onPress={handleSubmit}
-            disabled={isLoading}
-            style={[styles.submitButton, isLoading && styles.disabledButton]}
+            disabled={isSubmitting}
+            style={[styles.submitButton, isSubmitting && styles.disabledButton]}
           >
             {isLoading ? (
               <ActivityIndicator color="#fff" />
@@ -152,6 +199,36 @@ export default function LoginScreen() {
               </Text>
             )}
           </Pressable>
+
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          <View style={styles.socialButtons}>
+            <SocialButton
+              icon="logo-google"
+              label={
+                isRegisterMode ? "Sign up with Google" : "Continue with Google"
+              }
+              iconColor="#EA4335"
+              disabled={isSubmitting}
+              isLoading={loadingProvider === "google"}
+              onPress={() => handleSocialAuth("google")}
+            />
+
+            <SocialButton
+              icon="logo-github"
+              label={
+                isRegisterMode ? "Sign up with GitHub" : "Continue with GitHub"
+              }
+              iconColor={colors.text}
+              disabled={isSubmitting}
+              isLoading={loadingProvider === "github"}
+              onPress={() => handleSocialAuth("github")}
+            />
+          </View>
 
           <Pressable onPress={toggleMode} style={styles.switchButton}>
             <Text style={styles.switchText}>
@@ -166,7 +243,47 @@ export default function LoginScreen() {
   );
 }
 
+function SocialButton({
+  icon,
+  label,
+  iconColor,
+  disabled,
+  isLoading,
+  onPress,
+}: {
+  icon: IconName;
+  label: string;
+  iconColor: string;
+  disabled: boolean;
+  isLoading: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.socialButton, disabled && styles.disabledButton]}
+    >
+      {isLoading ? (
+        <ActivityIndicator color={colors.text} />
+      ) : (
+        <>
+          <Ionicons name={icon} size={21} color={iconColor} />
+          <Text style={styles.socialButtonText}>{label}</Text>
+        </>
+      )}
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: colors.background,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   screen: {
     flex: 1,
     backgroundColor: colors.background,
@@ -252,6 +369,47 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "900",
+  },
+
+  dividerRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.md,
+    marginVertical: spacing.lg,
+  },
+
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
+  },
+
+  dividerText: {
+    color: colors.muted,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+
+  socialButtons: {
+    gap: spacing.sm,
+  },
+
+  socialButton: {
+    height: 52,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: spacing.sm,
+  },
+
+  socialButtonText: {
+    color: colors.text,
+    fontSize: 15,
+    fontWeight: "800",
   },
 
   switchButton: {

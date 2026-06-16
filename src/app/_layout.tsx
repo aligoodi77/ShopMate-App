@@ -1,6 +1,5 @@
 import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppStoreProvider } from "../store/appStore";
 import { ToastProvider } from "@/components/AppToast";
 import { AuthStoreProvider } from "@/store/authStore";

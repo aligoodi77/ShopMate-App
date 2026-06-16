@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Animated,
   Easing,
   FlatList,
@@ -21,7 +22,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { fetchProducts } from "../../api/productsApi";
 import { Product, ProductCategory } from "../../data/products";
+import { logoutUser } from "../../lib/auth";
 import { useAppStore } from "../../store/appStore";
+import { useAuthStore } from "../../store/authStore";
 import { useToast } from "@/components/AppToast";
 // import { useCartStore } from "../../store/cartStore";
 
@@ -85,12 +88,22 @@ export default function HomeScreen() {
     addToCart,
     getTotalCount,
   } = useAppStore();
+  const { profile, session } = useAuthStore();
 
   const { showToast } = useToast();
 
   // const cartCount = useCartStore((state) => state.getTotalCount());
   // const cartCount = 0;
   const cartCount = getTotalCount();
+  const drawerName =
+    profile?.full_name?.trim() ||
+    session?.user.email?.split("@")[0] ||
+    "ShopMate User";
+  const drawerEmail =
+    profile?.email?.trim() || session?.user.email || "guest@shopmate.dev";
+  const drawerAvatarSource = profile?.avatar_url?.trim()
+    ? { uri: profile.avatar_url }
+    : userAvatarImage;
   const trendCardWidth = width - 36;
   const drawerWidth = Math.min(width * 0.8, 320);
   const [drawerProgress] = useState(() => new Animated.Value(0));
@@ -209,9 +222,18 @@ export default function HomeScreen() {
     console.log("start voice search");
   }
 
-  function handleLogout() {
+  async function handleLogout() {
     closeDrawer();
-    router.replace("/login");
+
+    try {
+      await logoutUser();
+      router.replace("/login");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not log out.";
+
+      Alert.alert("Logout error", message);
+    }
   }
 
   if (isLoading) {
@@ -583,14 +605,14 @@ export default function HomeScreen() {
               edges={["top", "bottom"]}
             >
               <View style={styles.drawerHeader}>
-                <Image source={userAvatarImage} style={styles.drawerAvatar} />
+                <Image source={drawerAvatarSource} style={styles.drawerAvatar} />
 
                 <View style={styles.drawerTitleBox}>
                   <Text style={[styles.drawerTitle, { color: theme.text }]}>
-                    John Doe
+                    {drawerName}
                   </Text>
                   <Text style={[styles.drawerSubtitle, { color: theme.muted }]}>
-                    john.doe@email.com
+                    {drawerEmail}
                   </Text>
                 </View>
 

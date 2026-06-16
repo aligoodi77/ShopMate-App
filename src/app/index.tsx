@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useRef, useState } from "react";
+import { Redirect, router } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Pressable,
   StyleSheet,
@@ -12,6 +13,8 @@ import {
   ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import { useAuthStore } from "../store/authStore";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
@@ -88,13 +91,17 @@ const slides: Slide[] = [
 
 export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
+  const { session, isLoading } = useAuthStore();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 60,
-  }).current;
+  const viewabilityConfig = useMemo(
+    () => ({
+      viewAreaCoveragePercentThreshold: 60,
+    }),
+    [],
+  );
 
-  const onViewableItemsChanged = useRef(
+  const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const index = viewableItems[0]?.index;
 
@@ -102,7 +109,8 @@ export default function OnboardingScreen() {
         setActiveIndex(index);
       }
     },
-  ).current;
+    [],
+  );
 
   function handleGetStarted() {
     router.replace({
@@ -114,6 +122,18 @@ export default function OnboardingScreen() {
     router.push({
       pathname: "/login",
     });
+  }
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.loadingScreen}>
+        <ActivityIndicator size="large" color="#0B63F6" />
+      </SafeAreaView>
+    );
+  }
+
+  if (session) {
+    return <Redirect href="/home" />;
   }
 
   return (
@@ -194,6 +214,13 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingScreen: {
+    flex: 1,
+    backgroundColor: "#F8FAFC",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   screen: {
     flex: 1,
     backgroundColor: "#F8FAFC",

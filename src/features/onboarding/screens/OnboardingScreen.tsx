@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   FlatList,
   Pressable,
@@ -19,11 +19,14 @@ export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 60,
-  }).current;
+  const viewabilityConfig = useMemo(
+    () => ({
+      viewAreaCoveragePercentThreshold: 60,
+    }),
+    [],
+  );
 
-  const onViewableItemsChanged = useRef(
+  const onViewableItemsChanged = useCallback(
     ({ viewableItems }: { viewableItems: ViewToken[] }) => {
       const currentIndex = viewableItems[0]?.index;
 
@@ -31,7 +34,8 @@ export default function OnboardingScreen() {
         setActiveIndex(currentIndex);
       }
     },
-  ).current;
+    [],
+  );
 
   function handleGetStarted() {
     router.replace("/(tabs)/home");
