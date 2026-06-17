@@ -14,6 +14,8 @@ type ProductRow = {
   stock: number | null;
 };
 
+const PRODUCT_IMAGES_BUCKET = "Images";
+
 export type ProductInput = {
   title: string;
   description: string;
@@ -95,6 +97,39 @@ export async function updateProduct(
   return mapProduct(data as ProductRow);
 }
 
+export async function uploadProductImage({
+  uri,
+  mimeType,
+  fileName,
+}: {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
+}): Promise<string> {
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const contentType = mimeType || blob.type || "image/jpeg";
+  const extension = getImageExtension(fileName, contentType);
+  const path = `products/${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .upload(path, blob, {
+      contentType,
+      upsert: true,
+    });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const { data } = supabase.storage
+    .from(PRODUCT_IMAGES_BUCKET)
+    .getPublicUrl(path);
+
+  return data.publicUrl;
+}
+
 function toProductRowInput(input: ProductInput) {
   return {
     title: input.title,
@@ -105,4 +140,22 @@ function toProductRowInput(input: ProductInput) {
     is_trending: input.isTrending,
     stock: input.stock,
   };
+}
+
+function getImageExtension(fileName?: string | null, mimeType?: string) {
+  const fileExtension = fileName?.split(".").pop()?.toLowerCase();
+
+  if (fileExtension && /^[a-z0-9]+$/.test(fileExtension)) {
+    return fileExtension === "jpeg" ? "jpg" : fileExtension;
+  }
+
+  if (mimeType?.includes("png")) {
+    return "png";
+  }
+
+  if (mimeType?.includes("webp")) {
+    return "webp";
+  }
+
+  return "jpg";
 }

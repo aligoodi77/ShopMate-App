@@ -20,6 +20,8 @@ export type ProfileUpdateInput = {
   avatarUrl?: string | null;
 };
 
+const PROFILE_IMAGES_BUCKET = "Images";
+
 export async function fetchMyProfile(): Promise<Profile | null> {
   const {
     data: { user },
@@ -73,6 +75,52 @@ export async function updateMyProfile({
   }
 
   return data as Profile;
+}
+
+export async function uploadMyProfileAvatar({
+  uri,
+  mimeType,
+  fileName,
+}: {
+  uri: string;
+  mimeType?: string | null;
+  fileName?: string | null;
+}): Promise<string> {
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+
+  if (userError) {
+    throw new Error(userError.message);
+  }
+
+  if (!user) {
+    throw new Error("You must be logged in to upload a profile image.");
+  }
+
+  const response = await fetch(uri);
+  const blob = await response.blob();
+  const contentType = mimeType || blob.type || "image/jpeg";
+  const extension = getImageExtension(fileName, contentType);
+  const path = `avatars/${user.id}/${Date.now()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(PROFILE_IMAGES_BUCKET)
+    .upload(path, blob, {
+      contentType,
+      upsert: true,
+    });
+
+  if (uploadError) {
+    throw new Error(uploadError.message);
+  }
+
+  const { data } = supabase.storage
+    .from(PROFILE_IMAGES_BUCKET)
+    .getPublicUrl(path);
+
+  return data.publicUrl;
 }
 
 async function fetchOrCreateProfile(user: User): Promise<Profile> {
@@ -130,4 +178,22 @@ function getMetadataString(user: User, key: string) {
   const value = user.user_metadata?.[key];
 
   return typeof value === "string" && value.trim() ? value : null;
+}
+
+function getImageExtension(fileName?: string | null, mimeType?: string) {
+  const fileExtension = fileName?.split(".").pop()?.toLowerCase();
+
+  if (fileExtension && /^[a-z0-9]+$/.test(fileExtension)) {
+    return fileExtension === "jpeg" ? "jpg" : fileExtension;
+  }
+
+  if (mimeType?.includes("png")) {
+    return "png";
+  }
+
+  if (mimeType?.includes("webp")) {
+    return "webp";
+  }
+
+  return "jpg";
 }

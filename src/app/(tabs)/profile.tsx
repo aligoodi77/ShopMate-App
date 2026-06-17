@@ -25,6 +25,7 @@ import {
   fetchProducts,
   ProductInput,
   updateProduct,
+  uploadProductImage,
 } from "../../api/productsApi";
 import {
   products as fallbackProducts,
@@ -32,7 +33,7 @@ import {
   ProductCategory,
 } from "../../data/products";
 import { logoutUser, updatePassword } from "../../lib/auth";
-import { updateMyProfile } from "../../lib/profile";
+import { updateMyProfile, uploadMyProfileAvatar } from "../../lib/profile";
 import { CartItem, useAppStore } from "../../store/appStore";
 import { useAuthStore } from "../../store/authStore";
 import { colors, radius, spacing } from "../../theme";
@@ -201,6 +202,8 @@ export default function ProfileScreen() {
   const [editFullName, setEditFullName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editAvatarUrl, setEditAvatarUrl] = useState("");
+  const [editAvatarAsset, setEditAvatarAsset] =
+    useState<ImagePicker.ImagePickerAsset | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [shippingAddress, setShippingAddress] = useState(
@@ -213,6 +216,7 @@ export default function ProfileScreen() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [isSavingPassword, setIsSavingPassword] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [isUploadingProductImage, setIsUploadingProductImage] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const theme = useMemo(() => createProfileTheme(isDarkMode), [isDarkMode]);
@@ -270,6 +274,10 @@ export default function ProfileScreen() {
   );
 
   function scrollToDetail() {
+    if (detailTop <= 0) {
+      return;
+    }
+
     requestAnimationFrame(() => {
       scrollRef.current?.scrollTo({
         y: Math.max(detailTop - spacing.sm, 0),
@@ -292,6 +300,7 @@ export default function ProfileScreen() {
     setEditFullName(displayName === "Guest User" ? "" : displayName);
     setEditEmail(displayEmail);
     setEditAvatarUrl(displayAvatarUrl);
+    setEditAvatarAsset(null);
     setIsEditVisible(true);
   }
 
@@ -323,6 +332,7 @@ export default function ProfileScreen() {
       const pickedUri = result.assets[0]?.uri;
 
       if (pickedUri) {
+        setEditAvatarAsset(result.assets[0]);
         setEditAvatarUrl(pickedUri);
       }
     }
@@ -344,12 +354,21 @@ export default function ProfileScreen() {
 
     try {
       setIsSavingProfile(true);
+      const savedAvatarUrl = editAvatarAsset
+        ? await uploadMyProfileAvatar({
+            uri: editAvatarAsset.uri,
+            mimeType: editAvatarAsset.mimeType,
+            fileName: editAvatarAsset.fileName,
+          })
+        : editAvatarUrl.trim();
+
       await updateMyProfile({
         fullName,
         email,
-        avatarUrl: editAvatarUrl.trim() || null,
+        avatarUrl: savedAvatarUrl || null,
       });
       await refreshProfile();
+      setEditAvatarAsset(null);
       setIsEditVisible(false);
       Alert.alert("Profile updated", "Your profile changes were saved.");
     } catch (error) {
@@ -450,6 +469,54 @@ export default function ProfileScreen() {
       Alert.alert("Product error", message);
     } finally {
       setIsSavingProduct(false);
+    }
+  }
+
+  async function handlePickProductImage() {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      Alert.alert(
+        "Photo access required",
+        "Please allow photo library access to upload a product image.",
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.86,
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    const asset = result.assets[0];
+
+    if (!asset?.uri) {
+      return;
+    }
+
+    try {
+      setIsUploadingProductImage(true);
+      const imageUrl = await uploadProductImage({
+        uri: asset.uri,
+        mimeType: asset.mimeType,
+        fileName: asset.fileName,
+      });
+
+      setProductField("imageUrl", imageUrl);
+      Alert.alert("Image uploaded", "Product image URL is ready to save.");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Could not upload image.";
+
+      Alert.alert("Upload error", message);
+    } finally {
+      setIsUploadingProductImage(false);
     }
   }
 
@@ -652,10 +719,12 @@ export default function ProfileScreen() {
               productForm={productForm}
               editingProductId={editingProductId}
               isSavingProduct={isSavingProduct}
+              isUploadingProductImage={isUploadingProductImage}
               adminOrders={adminOrders}
               customers={customers}
               salesReport={salesReport}
               onChangeProductField={setProductField}
+              onPickProductImage={handlePickProductImage}
               onSaveProduct={handleSaveProduct}
               onResetProduct={resetProductForm}
               onEditProduct={handleEditProduct}
@@ -1079,10 +1148,12 @@ function AdminDetailSection({
   productForm,
   editingProductId,
   isSavingProduct,
+  isUploadingProductImage,
   adminOrders,
   customers,
   salesReport,
   onChangeProductField,
+  onPickProductImage,
   onSaveProduct,
   onResetProduct,
   onEditProduct,
@@ -1095,6 +1166,7 @@ function AdminDetailSection({
   productForm: ProductFormState;
   editingProductId: string | null;
   isSavingProduct: boolean;
+  isUploadingProductImage: boolean;
   adminOrders: AdminOrder[];
   customers: CustomerRecord[];
   salesReport: SalesPoint[];
@@ -1102,6 +1174,7 @@ function AdminDetailSection({
     field: K,
     value: ProductFormState[K],
   ) => void;
+  onPickProductImage: () => void;
   onSaveProduct: () => void;
   onResetProduct: () => void;
   onEditProduct: (product: Product) => void;
@@ -1115,8 +1188,10 @@ function AdminDetailSection({
         form={productForm}
         editingProductId={editingProductId}
         isSaving={isSavingProduct}
+        isUploadingImage={isUploadingProductImage}
         theme={theme}
         onChangeField={onChangeProductField}
+        onPickImage={onPickProductImage}
         onSave={onSaveProduct}
         onReset={onResetProduct}
         onEdit={onEditProduct}
@@ -1199,8 +1274,10 @@ function ProductManager({
   form,
   editingProductId,
   isSaving,
+  isUploadingImage,
   theme,
   onChangeField,
+  onPickImage,
   onSave,
   onReset,
   onEdit,
@@ -1211,11 +1288,13 @@ function ProductManager({
   form: ProductFormState;
   editingProductId: string | null;
   isSaving: boolean;
+  isUploadingImage: boolean;
   theme: ProfileTheme;
   onChangeField: <K extends keyof ProductFormState>(
     field: K,
     value: ProductFormState[K],
   ) => void;
+  onPickImage: () => void;
   onSave: () => void;
   onReset: () => void;
   onEdit: (product: Product) => void;
@@ -1301,6 +1380,30 @@ function ProductManager({
           },
         ]}
       />
+      <Pressable
+        style={[
+          styles.uploadProductImageButton,
+          { borderColor: theme.border },
+          (isSaving || isUploadingImage) && styles.disabledButton,
+        ]}
+        onPress={onPickImage}
+        disabled={isSaving || isUploadingImage}
+      >
+        {isUploadingImage ? (
+          <ActivityIndicator color={colors.primary} />
+        ) : (
+          <>
+            <Ionicons
+              name="cloud-upload-outline"
+              size={20}
+              color={colors.primary}
+            />
+            <Text style={[styles.uploadButtonText, { color: theme.text }]}>
+              Upload Product Image
+            </Text>
+          </>
+        )}
+      </Pressable>
 
       <View style={styles.categoryWrap}>
         {productCategories.map((category) => {
@@ -2772,6 +2875,19 @@ const styles = StyleSheet.create({
   uploadButtonText: {
     fontSize: 14,
     fontWeight: "900",
+  },
+
+  uploadProductImageButton: {
+    minHeight: 48,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.sm,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.md,
   },
 
   modalField: {

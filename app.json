@@ -1,21 +1,27 @@
 {
   "expo": {
-    "name": "rn-lab",
-    "slug": "rn-lab",
+    "name": "shopmate",
+    "slug": "shopmate",
+    "owner": "aligoudarzi77",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "rnlab",
+    "scheme": "shopmate",
     "userInterfaceStyle": "automatic",
     "android": {
-      "predictiveBackGestureEnabled": false
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "com.aligoudarzi77.shopmate",
+      "versionCode": 1
     },
     "web": {
       "output": "static"
     },
-    "plugins": [
-      "expo-router",
-      "expo-web-browser"
-    ],
+    "plugins": ["expo-router", "expo-web-browser"],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

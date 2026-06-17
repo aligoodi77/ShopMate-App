@@ -30,8 +30,6 @@ import { useToast } from "@/components/AppToast";
 
 type IconName = keyof typeof Ionicons.glyphMap;
 
-const userAvatarImage = require("../../assets/images/user-avatar.png");
-
 const categoryIcons: Record<ProductCategory | "All", IconName> = {
   All: "grid",
   Laptops: "laptop",
@@ -101,9 +99,7 @@ export default function HomeScreen() {
     "ShopMate User";
   const drawerEmail =
     profile?.email?.trim() || session?.user.email || "guest@shopmate.dev";
-  const drawerAvatarSource = profile?.avatar_url?.trim()
-    ? { uri: profile.avatar_url }
-    : userAvatarImage;
+  const drawerAvatarUrl = profile?.avatar_url?.trim() || "";
   const trendCardWidth = width - 36;
   const drawerWidth = Math.min(width * 0.8, 320);
   const [drawerProgress] = useState(() => new Animated.Value(0));
@@ -605,7 +601,7 @@ export default function HomeScreen() {
               edges={["top", "bottom"]}
             >
               <View style={styles.drawerHeader}>
-                <Image source={drawerAvatarSource} style={styles.drawerAvatar} />
+                <DrawerAvatar avatarUrl={drawerAvatarUrl} name={drawerName} />
 
                 <View style={styles.drawerTitleBox}>
                   <Text style={[styles.drawerTitle, { color: theme.text }]}>
@@ -720,6 +716,35 @@ export default function HomeScreen() {
       </Modal>
     </>
   );
+}
+
+function DrawerAvatar({
+  avatarUrl,
+  name,
+}: {
+  avatarUrl: string;
+  name: string;
+}) {
+  return (
+    <View style={styles.drawerAvatar}>
+      {avatarUrl ? (
+        <Image source={{ uri: avatarUrl }} style={styles.drawerAvatarImage} />
+      ) : (
+        <Text style={styles.drawerAvatarText}>{getInitials(name)}</Text>
+      )}
+    </View>
+  );
+}
+
+function getInitials(name: string) {
+  const initials = name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return initials || "U";
 }
 
 const styles = StyleSheet.create({
@@ -1167,6 +1192,20 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: 36,
     backgroundColor: "#EAF3FF",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+
+  drawerAvatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+
+  drawerAvatarText: {
+    color: "#0B63F6",
+    fontSize: 22,
+    fontWeight: "900",
   },
 
   drawerTitleBox: {

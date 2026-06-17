@@ -7,6 +7,7 @@ import {
   Image,
   Platform,
   Pressable,
+  StatusBar,
   StyleSheet,
   Text,
   View,
@@ -128,6 +129,10 @@ export default function CartScreen() {
       <SafeAreaView
         style={[styles.screen, { backgroundColor: theme.background }]}
       >
+        <StatusBar
+          barStyle={isDarkMode ? "light-content" : "dark-content"}
+          backgroundColor={theme.background}
+        />
         <View style={styles.header}>
           <Pressable
             style={[
@@ -177,6 +182,10 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
+      <StatusBar
+        barStyle={isDarkMode ? "light-content" : "dark-content"}
+        backgroundColor={theme.background}
+      />
       <View style={styles.header}>
         <Pressable
           style={[
